@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://zhougongzi2026.github.io/my-blog/sitemap.xml

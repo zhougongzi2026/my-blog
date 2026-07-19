@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>我的博客</title>
+  <meta name="description" content="记录想法、分享故事的地方" />
+  <link rel="canonical" href="https://zhougongzi2026.github.io/my-blog/" />
+  <meta property="og:site_name" content="我的博客" />
+  <meta property="og:title" content="我的博客" />
+  <meta property="og:description" content="记录想法、分享故事的地方" />
+  <meta property="og:url" content="https://zhougongzi2026.github.io/my-blog/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="alternate" type="application/rss+xml" title="我的博客 RSS" href="rss.xml" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site"><div class="site-inner">
+    <a class="brand" href="index.html">📝 我的博客</a>
+    <nav class="nav"><a class="btn ghost" href="rss.xml" title="RSS 订阅">📡 RSS</a></nav>
+  </div></header>
+  <main class="container">
+    <h1 class="page-title">我的博客</h1>
+    <p class="page-sub">记录想法、分享故事的地方</p>
+
+    <div class="searchbar">
+      <input id="search" type="search" placeholder="🔍 搜索文章标题、正文、分类或标签…" autocomplete="off" />
+      <button class="btn ghost" id="search-clear" title="清除">✕</button>
+    </div>
+
+    <div id="filters" class="filters"></div>
+    <div id="result-info" class="result-info"></div>
+    <div id="list" class="post-list"></div>
+    <div id="load-status" class="load-status"></div>
+
+    <!-- SEO 兜底：无 JS 时爬虫也能看到文章链接 -->
+    <noscript>
+      <ul>
+        <li><a href="post-a326f291-5554-4ed1-abaa-22ed83216878.html">唐朝平天下战役之李靖灭南梁之战</a></li>
+      </ul>
+    </noscript>
+  </main>
+
+  <script>
+    var POSTS = [{"id":"a326f291-5554-4ed1-abaa-22ed83216878","href":"post-a326f291-5554-4ed1-abaa-22ed83216878.html","title":"唐朝平天下战役之李靖灭南梁之战","excerpt":"621年（武德四年），这是李渊坐上龙椅的第四个年头，他五十六岁。北方基本平定，南方还有一个强大的割据势力南梁，皇帝叫萧铣，占着荆州、岳州、潭州、桂州地盘。 可就这么个地盘最大的割据势力，从唐军出兵到萧铣出降，李靖只用了两个月。萧铣到死都没想通，自己号称四十万的大军，怎么就败给了一支趁秋汛顺流而下的水军。 一、战前背景 …","author":"周间公子","date":"2026-07-20","category":"战争史","tags":["军事","历史"],"cover":"uploads/cover-09d52a3a-05be-45ce-b59d-0b4a2ae7f9ac.png","likes":0,"comments":0}];
+    var CATS = [{"name":"战争史","count":1}];
+    var TAGS = [{"name":"军事","count":1},{"name":"历史","count":1}];
+    function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+    var params = new URLSearchParams(location.search);
+    var activeCat = params.get('category') || '';
+    var activeTag = params.get('tag') || '';
+    var activeQ = (params.get('q') || '').trim();
+
+    var listEl = document.getElementById('list');
+    var infoEl = document.getElementById('result-info');
+    var filtersEl = document.getElementById('filters');
+    var statusEl = document.getElementById('load-status');
+    var searchEl = document.getElementById('search');
+    searchEl.value = activeQ;
+
+    function renderFilters(){
+      var html = '<a class="chip '+(!activeCat&&!activeTag?'active':'')+'" href="index.html">全部</a>';
+      CATS.forEach(function(c){
+        html += '<a class="chip '+(activeCat===c.name?'active':'')+'" href="index.html?category='+encodeURIComponent(c.name)+'">📁 '+esc(c.name)+' <span class="count">'+c.count+'</span></a>';
+      });
+      TAGS.forEach(function(t){
+        html += '<a class="chip tag '+(activeTag===t.name?'active':'')+'" href="index.html?tag='+encodeURIComponent(t.name)+'">#'+esc(t.name)+' <span class="count">'+t.count+'</span></a>';
+      });
+      filtersEl.innerHTML = html;
+    }
+    function cardHtml(p){
+      return '<article class="post-card" onclick="location.href=\''+p.href+'\'">'
+        + (p.cover?'<img class="cover" src="'+esc(p.cover)+'" alt="" />':'')
+        + '<h2>'+esc(p.title)+'</h2>'
+        + '<div class="meta"><span>✍️ '+esc(p.author)+'</span><span>🕒 '+esc(p.date)+'</span>'
+        + '<a class="chip sm" href="index.html?category='+encodeURIComponent(p.category)+'" onclick="event.stopPropagation()">📁 '+esc(p.category)+'</a>'
+        + p.tags.map(function(t){return '<a class="chip sm tag" href="index.html?tag='+encodeURIComponent(t)+'" onclick="event.stopPropagation()">#'+esc(t)+'</a>';}).join('')
+        + '</div>'
+        + '<p class="excerpt">'+esc(p.excerpt)+'</p>'
+        + '<div class="card-stats"><span>❤️ '+(p.likes||0)+'</span><span>💬 '+(p.comments||0)+'</span></div>'
+        + '</article>';
+    }
+    function apply(){
+      var q = activeQ.toLowerCase();
+      var arr = POSTS.filter(function(p){
+        if (activeCat && p.category !== activeCat) return false;
+        if (activeTag && p.tags.indexOf(activeTag) < 0) return false;
+        if (q){
+          var hay = (p.title+' '+p.excerpt+' '+p.category+' '+p.tags.join(' ')).toLowerCase();
+          if (hay.indexOf(q) < 0) return false;
+        }
+        return true;
+      });
+      if (!arr.length){
+        listEl.innerHTML = '<div class="empty">'+(activeQ?('没有找到与「'+esc(activeQ)+'」相关的文章。'):'这里还没有已发布的文章。')+'</div>';
+        infoEl.textContent = '';
+        return;
+      }
+      var parts = [];
+      if (activeQ) parts.push('搜索「'+esc(activeQ)+'」');
+      if (activeCat) parts.push('分类「'+esc(activeCat)+'」');
+      if (activeTag) parts.push('标签「'+esc(activeTag)+'」');
+      infoEl.innerHTML = (parts.length?parts.join(' · ')+'，':'共 ')+'<b>'+arr.length+'</b> 篇' + (parts.length?'':'文章');
+      listEl.innerHTML = arr.map(cardHtml).join('');
+    }
+    var t=null;
+    function onSearch(v){
+      activeQ = v.trim();
+      var u = new URL(location.href);
+      if (activeQ) u.searchParams.set('q', activeQ); else u.searchParams.delete('q');
+      history.replaceState(null,'',u);
+      apply();
+    }
+    searchEl.addEventListener('input', function(){ clearTimeout(t); t=setTimeout(function(){onSearch(searchEl.value);},250); });
+    searchEl.addEventListener('keydown', function(e){ if(e.key==='Enter'){clearTimeout(t);onSearch(searchEl.value);} });
+    document.getElementById('search-clear').addEventListener('click', function(){ searchEl.value=''; onSearch(''); searchEl.focus(); });
+
+    renderFilters();
+    apply();
+  </script>
+</body>
+</html>
